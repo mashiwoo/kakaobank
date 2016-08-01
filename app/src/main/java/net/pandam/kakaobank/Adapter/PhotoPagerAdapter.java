@@ -2,6 +2,7 @@ package net.pandam.kakaobank.adapter;
 
 import android.content.Context;
 import android.os.Environment;
+import android.support.v4.view.ViewPager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,8 +15,9 @@ import com.androidquery.AQuery;
 import com.androidquery.callback.AjaxCallback;
 import com.androidquery.callback.AjaxStatus;
 
-import net.pandam.kakaobank.module.PhotosInfo;
+import net.pandam.kakaobank.MainActivity;
 import net.pandam.kakaobank.R;
+import net.pandam.kakaobank.module.PhotosInfo;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -24,7 +26,26 @@ import java.util.ArrayList;
  * Created by Pandam on 16. 7. 30..
  */
 public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.ViewHolder> {
+    private final ViewPager viewPager;
     private ArrayList<PhotosInfo> mdataSet;
+
+    // Provide a suitable constructor (depends on the kind of dataset)
+    public PhotoPagerAdapter(ArrayList<PhotosInfo> dataSet, ViewPager viewPager) {
+        mdataSet = dataSet;
+        this.viewPager = viewPager;
+    }
+
+
+    // Create new views (invoked by the layout manager)
+    @Override
+    public PhotoPagerAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
+    {
+        // create a new view
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_photos, parent, false);
+        // set the view's size, margins, paddings and layout parameters
+        ViewHolder vh = new ViewHolder(v);
+        return vh;
+    }
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
@@ -46,21 +67,8 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.Vi
         }
     }
 
-    // Provide a suitable constructor (depends on the kind of dataset)
-    public PhotoPagerAdapter(ArrayList<PhotosInfo> dataSet) {
-        mdataSet = dataSet;
-    }
 
-    // Create new views (invoked by the layout manager)
-    @Override
-    public PhotoPagerAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
-    {
-        // create a new view
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_photos, parent, false);
-        // set the view's size, margins, paddings and layout parameters
-        ViewHolder vh = new ViewHolder(v);
-        return vh;
-    }
+
 
     // Replace the contents of a view (invoked by the layout manager)
     @Override
@@ -83,8 +91,10 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.Vi
                 aq.download(downloadurl, file, new AjaxCallback<File>() {
                     @Override
                     public void callback(String url, File object, AjaxStatus status) {
-                        if (object != null)
+                        if (object != null) {
                             Toast.makeText(context, filepath + " 저장 하였습니다.", Toast.LENGTH_SHORT).show();
+                            MainActivity.setMyBox(context, viewPager);
+                        }
                         else
                             Toast.makeText(context, "저장 실패", Toast.LENGTH_SHORT).show();
                     }

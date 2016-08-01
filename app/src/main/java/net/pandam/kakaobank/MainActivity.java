@@ -1,20 +1,23 @@
 package net.pandam.kakaobank;
 
+import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.speech.RecognizerIntent;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -27,6 +30,11 @@ import com.androidquery.callback.AjaxCallback;
 import com.androidquery.callback.AjaxStatus;
 import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
+import net.pandam.kakaobank.adapter.AlbumPagerAdapter;
+import net.pandam.kakaobank.adapter.PhotoPagerAdapter;
+import net.pandam.kakaobank.global.AppCompatBaseActivity;
+import net.pandam.kakaobank.module.PhotosInfo;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -36,12 +44,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.pandam.kakaobank.adapter.AlbumPagerAdapter;
-import net.pandam.kakaobank.adapter.PhotoPagerAdapter;
-import net.pandam.kakaobank.module.PhotosInfo;
 
-
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatBaseActivity {
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -52,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
      * {@link android.support.v4.app.FragmentStatePagerAdapter}.
      */
     MaterialSearchView searchView;
+    private final int REQUEST_PERMISSION_STORAGE		= 1000;
 
     private AQuery aq;
     /**
@@ -65,7 +70,42 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Intent intent = new Intent(this, IntroActivity.class);
+        startActivity(intent);
+
+        // 퍼미션 검사
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
+        {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_PERMISSION_STORAGE);
+            return;
+        }
+
+        initialize();
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
+    {
+        switch (requestCode)
+        {
+            case REQUEST_PERMISSION_STORAGE:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                    initialize();
+                else
+                {
+                    //alert(R.string.no_permission);
+                    finish();
+                }
+                break;
+        }
+    }
+
+    private void initialize()
+    {
+
         aq = new AQuery(this);
+
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -79,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
         searchView.setOnQueryTextListener(new MaterialSearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(final String query) {
+                showModalProgress(true);
                 viewPager.setCurrentItem(0);
 
                 RecyclerView photoSectionsPagerAdapter = null;
@@ -148,9 +189,9 @@ public class MainActivity extends AppCompatActivity {
                             dataSet.add(photosInfos.get(i));
                         }
 
-                        mAdapter[0] = new PhotoPagerAdapter(dataSet);
+                        mAdapter[0] = new PhotoPagerAdapter(dataSet, viewPager);
                         finalMRecyclerView.setAdapter(mAdapter[0]);
-
+                        showModalProgress(false);
                     }
                 });
                 return false;
@@ -174,12 +215,61 @@ public class MainActivity extends AppCompatActivity {
                 //Do some magic
             }
         });
+    }
 
+    public static void setMyBox(Context context, View view)
+    {
+        RecyclerView albumSectionsPagerAdapter = null;
+
+        final RecyclerView.Adapter[] mAdapter = new RecyclerView.Adapter[1];
+        RecyclerView.LayoutManager mLayoutManager;
+
+        final ArrayList<PhotosInfo> dataSet;
+        final ArrayList<PhotosInfo> photosInfos = new ArrayList<PhotosInfo>();
+
+
+        albumSectionsPagerAdapter = (RecyclerView) view.findViewById(R.id.rvPhoto);
+
+        // use this setting to improve performance if you know that changes
+        // in content do not change the layout size of the RecyclerView
+        albumSectionsPagerAdapter.setHasFixedSize(true);
+
+        // use a linear layout manager
+        albumSectionsPagerAdapter.setLayoutManager(new GridLayoutManager
+                (context,
+                        2,
+                        GridLayoutManager.VERTICAL, false));
+
+        // specify an adapter (see also next example)
+        dataSet = new ArrayList<>();
+        // Set up the ViewPager with the sections adapter.
+        File folder = new File(Environment.getExternalStorageDirectory() + "/kakaobank/");
+        File[] list = folder.listFiles();
+
+        try {
+            for(File file : list) {
+                if (file.getName().endsWith(".png")) {
+                    PhotosInfo pi = new PhotosInfo();
+                    pi.thumbnail = file.getName();
+                    pi.image = file.getName();
+                    pi.title = file.getName();
+                    photosInfos.add(pi);
+                }
+            }
+            for(int i = 0; i < photosInfos.size(); i++) {
+                dataSet.add(photosInfos.get(i));
+            }
+
+            mAdapter[0] = new AlbumPagerAdapter(dataSet);
+            albumSectionsPagerAdapter.setAdapter(mAdapter[0]);
+        }
+        catch (Exception ex)
+        {
+
+        }
 
 
     }
-
-
 
     private void setupViewPager(ViewPager viewPager) {
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
@@ -271,48 +361,8 @@ public class MainActivity extends AppCompatActivity {
                 case 2:
                     rootView = inflater.inflate(R.layout.fragment_photo, container, false);
 
+                    setMyBox(getContext(), rootView);
 
-                    RecyclerView albumSectionsPagerAdapter = null;
-
-                    final RecyclerView.Adapter[] mAdapter = new RecyclerView.Adapter[1];
-                    RecyclerView.LayoutManager mLayoutManager;
-
-                    final ArrayList<PhotosInfo> dataSet;
-                    final ArrayList<PhotosInfo> photosInfos = new ArrayList<PhotosInfo>();
-
-
-                    albumSectionsPagerAdapter = (RecyclerView) rootView.findViewById(R.id.rvPhoto);
-
-                    // use this setting to improve performance if you know that changes
-                    // in content do not change the layout size of the RecyclerView
-                    albumSectionsPagerAdapter.setHasFixedSize(true);
-
-                    // use a linear layout manager
-                    albumSectionsPagerAdapter.setLayoutManager(new GridLayoutManager
-                            (getContext(),
-                                    2,
-                                    GridLayoutManager.VERTICAL, false));
-
-                    // specify an adapter (see also next example)
-                    dataSet = new ArrayList<>();
-                    // Set up the ViewPager with the sections adapter.
-                    File folder = new File(Environment.getExternalStorageDirectory() + "/kakaobank/");
-                    File[] list = folder.listFiles();
-                    for(File file : list) {
-                        if (file.getName().endsWith(".png")) {
-                            PhotosInfo pi = new PhotosInfo();
-                            pi.thumbnail = file.getName();
-                            pi.image = file.getName();
-                            pi.title = file.getName();
-                            photosInfos.add(pi);
-                        }
-                    }
-                    for(int i = 0; i < photosInfos.size(); i++) {
-                        dataSet.add(photosInfos.get(i));
-                    }
-
-                    mAdapter[0] = new AlbumPagerAdapter(dataSet);
-                    albumSectionsPagerAdapter.setAdapter(mAdapter[0]);
                     break;
                 default:
                     break;
@@ -349,9 +399,9 @@ public class MainActivity extends AppCompatActivity {
         public CharSequence getPageTitle(int position) {
             switch (position) {
                 case 0:
-                    return "TAB 1";
+                    return "이미지 리스트";
                 case 1:
-                    return "TAB 2";
+                    return "보관함";
             }
             return null;
         }
