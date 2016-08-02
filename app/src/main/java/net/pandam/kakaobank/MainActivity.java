@@ -24,6 +24,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.androidquery.AQuery;
 import com.androidquery.callback.AjaxCallback;
@@ -33,7 +34,9 @@ import com.miguelcatalan.materialsearchview.MaterialSearchView;
 import net.pandam.kakaobank.adapter.AlbumPagerAdapter;
 import net.pandam.kakaobank.adapter.PhotoPagerAdapter;
 import net.pandam.kakaobank.global.AppCompatBaseActivity;
+import net.pandam.kakaobank.global.Constants;
 import net.pandam.kakaobank.module.PhotosInfo;
+import net.pandam.kakaobank.uitil.EncryptionApp;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -47,23 +50,20 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatBaseActivity {
 
-    /**
-     * The {@link android.support.v4.view.PagerAdapter} that will provide
-     * fragments for each of the sections. We use a
-     * {@link FragmentPagerAdapter} derivative, which will keep every
-     * loaded fragment in memory. If this becomes too memory intensive, it
-     * may be best to switch to a
-     * {@link android.support.v4.app.FragmentStatePagerAdapter}.
-     */
     MaterialSearchView searchView;
     private final int REQUEST_PERMISSION_STORAGE		= 1000;
 
     private AQuery aq;
-    /**
-     * The {@link ViewPager} that will host the section contents.
-     */
     private ViewPager viewPager;
     private SectionsPagerAdapter mSectionsPagerAdapter;
+    private RecyclerView photoSectionsPagerAdapter = null;
+    private GridLayoutManager glManager = null;
+    private boolean loading = true;
+    int firstVisibleItem = 0;
+    int visibleItemCount = 0;
+    int totalItemCount = 0;
+    int previousTotal = 0;
+    private int pageno = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,7 +94,7 @@ public class MainActivity extends AppCompatBaseActivity {
                     initialize();
                 else
                 {
-                    //alert(R.string.no_permission);
+                    alert(R.string.no_permission);
                     finish();
                 }
                 break;
@@ -122,78 +122,8 @@ public class MainActivity extends AppCompatBaseActivity {
                 showModalProgress(true);
                 viewPager.setCurrentItem(0);
 
-                RecyclerView photoSectionsPagerAdapter = null;
+                SetSearchImage(query, 0);
 
-                final RecyclerView.Adapter[] mAdapter = new RecyclerView.Adapter[1];
-                RecyclerView.LayoutManager mLayoutManager;
-
-                final ArrayList<PhotosInfo> dataSet;
-                final ArrayList<PhotosInfo> photosInfos = new ArrayList<PhotosInfo>();
-
-                photoSectionsPagerAdapter = (RecyclerView) viewPager.findViewById(R.id.rvMain);
-
-                // use this setting to improve performance if you know that changes
-                // in content do not change the layout size of the RecyclerView
-                photoSectionsPagerAdapter.setHasFixedSize(true);
-
-                // use a linear layout manager
-                photoSectionsPagerAdapter.setLayoutManager(new GridLayoutManager
-                        (getApplication(),
-                                2,
-                                GridLayoutManager.VERTICAL, false));
-
-                // specify an adapter (see also next example)
-                dataSet = new ArrayList<>();
-
-                //Do some magic
-                String Keyword = URLEncoder.encode(query);
-                Map<String, Object> params = new HashMap<String, Object>();
-                params.put("apikey", "0711ca8469e9f84c424d5784792982ee");
-                params.put("q", Keyword);
-                params.put("output", "json");
-
-                final RecyclerView finalMRecyclerView = photoSectionsPagerAdapter;
-                aq.ajax("http://apis.daum.net/search/image?apikey=25f586d765608702325b1770e5e5c582&q=" + Keyword + "&output=json", params, JSONObject.class, new AjaxCallback<JSONObject>() {
-                    @Override
-                    public void callback(String url, JSONObject jo, AjaxStatus status) {
-                        if (jo != null) {
-                            try {
-                                JSONObject joChannel = jo.getJSONObject("channel");
-                                String result = joChannel.getString("result");
-
-                                JSONArray jaItem = joChannel.getJSONArray("item");
-
-                                for (int i = 0; i < jaItem.length(); i++) {
-                                    JSONObject joItem = jaItem.getJSONObject(i);
-
-                                    PhotosInfo pi = new PhotosInfo();
-                                    pi.thumbnail = joItem.getString("thumbnail");
-                                    pi.image = joItem.getString("image");
-                                    pi.title = query;
-
-                                    photosInfos.add(pi);
-                                }
-
-                                setItme();
-
-
-                            } catch (Exception e) {
-
-                            }
-                        }
-                    }
-
-                    private void setItme() {
-
-                        for (int i = 0; i < photosInfos.size(); i++) {
-                            dataSet.add(photosInfos.get(i));
-                        }
-
-                        mAdapter[0] = new PhotoPagerAdapter(dataSet, viewPager);
-                        finalMRecyclerView.setAdapter(mAdapter[0]);
-                        showModalProgress(false);
-                    }
-                });
                 return false;
             }
 
@@ -216,6 +146,122 @@ public class MainActivity extends AppCompatBaseActivity {
             }
         });
     }
+
+    private void SetSearchImage(final String query, int plus) {
+
+        final RecyclerView.Adapter[] mAdapter = new RecyclerView.Adapter[1];
+
+
+        final ArrayList<PhotosInfo> dataSet;
+        final ArrayList<PhotosInfo> photosInfos = new ArrayList<PhotosInfo>();
+
+        photoSectionsPagerAdapter = (RecyclerView) viewPager.findViewById(R.id.rvMain);
+
+        // use this setting to improve performance if you know that changes
+        // in content do not change the layout size of the RecyclerView
+        photoSectionsPagerAdapter.setHasFixedSize(true);
+
+        // use a linear layout manager
+        glManager = new GridLayoutManager
+                (getApplication(),
+                        2,
+                        GridLayoutManager.VERTICAL, false);
+        photoSectionsPagerAdapter.setLayoutManager(glManager);
+
+        // specify an adapter (see also next example)
+        dataSet = new ArrayList<>();
+
+        //Do some magic
+        String Keyword = URLEncoder.encode(query);
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("apikey", Constants.KEY);
+        params.put("q", Keyword);
+        params.put("output", "json");
+
+        final RecyclerView finalMRecyclerView = photoSectionsPagerAdapter;
+        pageno = pageno + plus;
+        aq.ajax(EncryptionApp.getValue(Constants.API_SEARCH_URL) + "?apikey=" + Constants.KEY + "&q=" + Keyword + "&result=20&pageno=" + pageno + "&output=json", params, JSONObject.class, new AjaxCallback<JSONObject>() {
+            @Override
+            public void callback(String url, JSONObject jo, AjaxStatus status) {
+                if (jo != null) {
+                    try {
+                        JSONObject joChannel = jo.getJSONObject("channel");
+                        String result = joChannel.getString("result");
+
+                        JSONArray jaItem = joChannel.getJSONArray("item");
+
+                        for (int i = 0; i < jaItem.length(); i++) {
+                            JSONObject joItem = jaItem.getJSONObject(i);
+
+                            PhotosInfo pi = new PhotosInfo();
+                            pi.thumbnail = joItem.getString("thumbnail");
+                            pi.image = joItem.getString("image");
+                            pi.title = query;
+
+                            photosInfos.add(pi);
+                        }
+
+                        setItme();
+
+
+                    } catch (Exception e) {
+                        Toast.makeText(context, getString(R.string.no_result), Toast.LENGTH_SHORT).show();
+                        aq.id(R.id.tvGuide).visible();
+                    }
+                }
+                else
+                {
+                    //검색 결과 없음
+                    Toast.makeText(context, getString(R.string.no_result), Toast.LENGTH_SHORT).show();
+                    aq.id(R.id.tvGuide).visible();
+                }
+            }
+
+            private void setItme() {
+                if(photosInfos.size() <= 0)
+                {
+                    Toast.makeText(context, getString(R.string.no_result), Toast.LENGTH_SHORT).show();
+                    aq.id(R.id.tvGuide).visible();
+                }
+                else {
+
+                    for (int i = 0; i < photosInfos.size(); i++) {
+                        dataSet.add(photosInfos.get(i));
+                    }
+
+                    mAdapter[0] = new PhotoPagerAdapter(dataSet, viewPager);
+                    finalMRecyclerView.setAdapter(mAdapter[0]);
+
+                    aq.id(R.id.tvGuide).gone();
+
+
+                    photoSectionsPagerAdapter.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                        @Override
+                        public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                            totalItemCount = glManager.getItemCount();
+                            visibleItemCount = glManager.getChildCount();
+                            firstVisibleItem = glManager.findFirstVisibleItemPosition();
+
+                            if (loading) {
+                                if (totalItemCount > previousTotal) {
+                                    loading = false;
+                                    previousTotal = totalItemCount;
+                                }
+                            }
+                            if (!loading && (totalItemCount - visibleItemCount)
+                                    <= (firstVisibleItem + 5)) {
+                                // End has been reached
+                                SetSearchImage(query, 1);
+                                loading = true;
+                            }
+                        }
+                    });
+                }
+                showModalProgress(false);
+            }
+        });
+    }
+
 
     public static void setMyBox(Context context, View view)
     {

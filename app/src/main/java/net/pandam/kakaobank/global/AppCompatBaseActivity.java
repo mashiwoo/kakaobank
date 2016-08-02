@@ -9,7 +9,6 @@ package net.pandam.kakaobank.global;
 
 import android.app.AlertDialog;
 import android.app.Application;
-import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -22,9 +21,6 @@ import android.os.Message;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.KeyEvent;
-import android.view.View;
-import android.widget.Spinner;
-import android.widget.Toast;
 
 import com.androidquery.AQuery;
 
@@ -39,35 +35,15 @@ import java.net.URL;
 public class AppCompatBaseActivity extends AppCompatActivity
 {
 	private SharedPreferences pref;
-	public String skin;
 	protected Application application;
 
-	protected final int ACTIVITY_CONFIG										= 1;
-	protected final int ACTION_LOGIN										= 9000;
-	protected final int ACTION_CLOSE_PROGRESS								= 9001;
 
 	private AQuery aq;
 	
 	protected Context context = this;
-	private Toast lastToast;
-	long timeAtClosing = 0;
-
-
-	protected String	 latitude = null;
-	protected String	 longitude = null;
-	protected int memberstate = 0;
 
 	private boolean isMainActivity = true;
-	private int isMenu = 0;
-
-	private float scrollX;
-
-
-	protected View statusView;
 	private ProgressDialog progressDialog = null;
-	
-	private Spinner spMore;
-	private int now_position = 0;
 
 
 	private Handler menuHandler = 	new Handler()
@@ -116,12 +92,6 @@ public class AppCompatBaseActivity extends AppCompatActivity
 	protected void onResume()
 	{
 		super.onResume();
-	}
-
-	@Override
-	protected Dialog onCreateDialog(int id)
-	{
-		return null;
 	}
 
 
@@ -236,33 +206,10 @@ public class AppCompatBaseActivity extends AppCompatActivity
 		}
 	}
 
-
-	protected void showModalProgress(boolean show, int message)
-	{
-		showModalProgress(show, getString(message));
-	}
-
-
 	protected void showModalProgress(boolean show)
 	{
 		showModalProgress(show, null);
 	}
-
-
-	/**
-	 * The {@link Tracker} used to record screen views.
-	 */
-	/*
-	public Tracker tracker;
-
-	public synchronized Tracker getTracker() {
-		if (tracker == null) {
-			GoogleAnalytics analytics = GoogleAnalytics.getInstance(this);
-			tracker = analytics.newTracker(R.xml.analytics);
-		}
-		return tracker;
-	}
-	*/
 }
 
 

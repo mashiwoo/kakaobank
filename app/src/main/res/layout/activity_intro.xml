@@ -5,7 +5,8 @@
     android:layout_height="fill_parent"
     android:background="@color/intro_bg"
     android:layout_margin="0dp"
-    android:padding="0dp" >
+    android:padding="0dp"
+    tools:context="net.pandam.kakaobank.IntroActivity">
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

@@ -8,6 +8,15 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="net.pandam.kakaobank.MainActivity$PlaceholderFragment">
 
+    <TextView
+        android:id="@+id/tvGuide"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:text="@string/search_guide"
+        android:textColor="@color/colorAccent"
+        android:gravity="center"
+        android:textSize="20dp"
+        />
     <android.support.v7.widget.RecyclerView
         android:id="@+id/rvMain"
         android:scrollbars="vertical"

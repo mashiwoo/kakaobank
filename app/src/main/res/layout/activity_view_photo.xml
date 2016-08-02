@@ -9,13 +9,6 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="net.pandam.kakaobank.ViewPhotoActivity">
 
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@color/colorPrimary"
-        android:visibility="gone"
-        />
 
     <ImageView
         android:id="@+id/ivPhoto"

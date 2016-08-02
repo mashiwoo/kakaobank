@@ -1,14 +1,13 @@
 package net.pandam.kakaobank.uitil;
 
+import android.util.Base64;
+
+import net.pandam.kakaobank.global.Constants;
+
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESedeKeySpec;
-
-
-import android.util.Base64;
-
-import net.pandam.kakaobank.global.Constants;
 
 
 public class EncryptionApp
@@ -18,7 +17,7 @@ public class EncryptionApp
  		EncryptionApp encryption = new EncryptionApp();
  		return encryption.decrypt(value, Constants.STRING_KEY);
  	}
-	
+
 	public static String getEnValue(String value)
  	{
  		EncryptionApp encryption = new EncryptionApp();
@@ -48,7 +47,7 @@ public class EncryptionApp
 
 		return null;
 	}
-	
+
 
 	  public String encrypt(String encryptedText, String keyString)
 	  {

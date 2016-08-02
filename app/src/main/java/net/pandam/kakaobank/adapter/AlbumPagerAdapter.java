@@ -8,7 +8,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.androidquery.AQuery;
 
@@ -31,7 +30,6 @@ public class AlbumPagerAdapter extends RecyclerView.Adapter<AlbumPagerAdapter.Vi
     public static class ViewHolder extends RecyclerView.ViewHolder {
         // each data item is just a string in this case
         public ImageView ivPhoto;
-        public TextView tvText;
         private AQuery aq;
         private Context context;
 
@@ -40,7 +38,6 @@ public class AlbumPagerAdapter extends RecyclerView.Adapter<AlbumPagerAdapter.Vi
             aq = new AQuery(view);
             context = view.getContext();
             ivPhoto = (ImageView)view.findViewById(R.id.ivPhoto);
-            tvText = (TextView)view.findViewById(R.id.tvText);
 
         }
     }
@@ -69,7 +66,6 @@ public class AlbumPagerAdapter extends RecyclerView.Adapter<AlbumPagerAdapter.Vi
         final AQuery aq = holder.aq;
         File fileImage = new File(Environment.getExternalStorageDirectory() + "/kakaobank/" + mdataSet.get(position).thumbnail);
         final String fileName = mdataSet.get(position).thumbnail;
-        holder.aq.id(holder.tvText).text(mdataSet.get(position).title);
         holder.aq.id(holder.ivPhoto).image(fileImage, RecyclerView.LayoutParams.WRAP_CONTENT);
 
         holder.ivPhoto.setOnClickListener(new View.OnClickListener() {

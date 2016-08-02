@@ -25,10 +25,14 @@
         </activity>
         <activity
             android:name=".IntroActivity"
-            android:label="@string/title_activity_intro"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".ViewPhotoActivity"></activity>
+            android:theme="@style/AppTheme">
+        </activity>
+        <activity
+            android:name=".ViewPhotoActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme">
+        </activity>
     </application>
 
 </manifest>
