@@ -3,9 +3,11 @@ package net.pandam.kakaobank;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
@@ -18,6 +20,7 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -56,7 +59,7 @@ public class MainActivity extends AppCompatBaseActivity {
     private AQuery aq;
     private ViewPager viewPager;
     private SectionsPagerAdapter mSectionsPagerAdapter;
-    private RecyclerView photoSectionsPagerAdapter = null;
+    private RecyclerView photoRecyclerView = null;
     private GridLayoutManager glManager = null;
     private boolean loading = true;
     int firstVisibleItem = 0;
@@ -64,6 +67,11 @@ public class MainActivity extends AppCompatBaseActivity {
     int totalItemCount = 0;
     int previousTotal = 0;
     private int pageno = 1;
+    private int lastCount = 0;
+    private ArrayList<PhotosInfo> dataSet = null;
+    private RecyclerView.Adapter[] mAdapter = null;
+    private ArrayList<PhotosInfo> photosInfos;
+    private SharedPreferences pref;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,7 +113,7 @@ public class MainActivity extends AppCompatBaseActivity {
     {
 
         aq = new AQuery(this);
-
+        pref = PreferenceManager.getDefaultSharedPreferences(context);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -122,7 +130,10 @@ public class MainActivity extends AppCompatBaseActivity {
                 showModalProgress(true);
                 viewPager.setCurrentItem(0);
 
-                SetSearchImage(query, 0);
+                ClearQuery();
+                pref.edit().putString("query", query).commit();
+
+                SetSearchImage(0);
 
                 return false;
             }
@@ -147,39 +158,55 @@ public class MainActivity extends AppCompatBaseActivity {
         });
     }
 
-    private void SetSearchImage(final String query, int plus) {
+    private void ClearQuery()
+    {
+        dataSet = new ArrayList<>();
+        pageno = 1;
+        lastCount = 0;
 
-        final RecyclerView.Adapter[] mAdapter = new RecyclerView.Adapter[1];
+        firstVisibleItem = 0;
+        visibleItemCount = 0;
+        totalItemCount = 0;
+        previousTotal = 0;
 
+        dataSet = new ArrayList<>();
+        mAdapter = new RecyclerView.Adapter[1];
 
-        final ArrayList<PhotosInfo> dataSet;
-        final ArrayList<PhotosInfo> photosInfos = new ArrayList<PhotosInfo>();
+        SetRecyclerView();
+    }
 
-        photoSectionsPagerAdapter = (RecyclerView) viewPager.findViewById(R.id.rvMain);
+    private void SetRecyclerView()
+    {
+
+        photoRecyclerView = (RecyclerView) viewPager.findViewById(R.id.rvMain);
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
-        photoSectionsPagerAdapter.setHasFixedSize(true);
+        photoRecyclerView.setHasFixedSize(true);
 
         // use a linear layout manager
         glManager = new GridLayoutManager
                 (getApplication(),
                         2,
                         GridLayoutManager.VERTICAL, false);
-        photoSectionsPagerAdapter.setLayoutManager(glManager);
+        photoRecyclerView.setLayoutManager(glManager);
+    }
 
+    private void SetSearchImage(final int plus) {
+
+
+        photosInfos = new ArrayList<PhotosInfo>();
         // specify an adapter (see also next example)
-        dataSet = new ArrayList<>();
 
         //Do some magic
-        String Keyword = URLEncoder.encode(query);
+        String Keyword = URLEncoder.encode(pref.getString("query",""));
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("apikey", Constants.KEY);
         params.put("q", Keyword);
         params.put("output", "json");
 
-        final RecyclerView finalMRecyclerView = photoSectionsPagerAdapter;
         pageno = pageno + plus;
+
         aq.ajax(EncryptionApp.getValue(Constants.API_SEARCH_URL) + "?apikey=" + Constants.KEY + "&q=" + Keyword + "&result=20&pageno=" + pageno + "&output=json", params, JSONObject.class, new AjaxCallback<JSONObject>() {
             @Override
             public void callback(String url, JSONObject jo, AjaxStatus status) {
@@ -196,7 +223,7 @@ public class MainActivity extends AppCompatBaseActivity {
                             PhotosInfo pi = new PhotosInfo();
                             pi.thumbnail = joItem.getString("thumbnail");
                             pi.image = joItem.getString("image");
-                            pi.title = query;
+                            pi.title = pref.getString("query","");
 
                             photosInfos.add(pi);
                         }
@@ -222,6 +249,11 @@ public class MainActivity extends AppCompatBaseActivity {
                 {
                     Toast.makeText(context, getString(R.string.no_result), Toast.LENGTH_SHORT).show();
                     aq.id(R.id.tvGuide).visible();
+                    dataSet.clear();
+
+                    mAdapter[0] = new PhotoPagerAdapter(dataSet, viewPager);
+                    photoRecyclerView.setAdapter(mAdapter[0]);
+
                 }
                 else {
 
@@ -229,13 +261,17 @@ public class MainActivity extends AppCompatBaseActivity {
                         dataSet.add(photosInfos.get(i));
                     }
 
-                    mAdapter[0] = new PhotoPagerAdapter(dataSet, viewPager);
-                    finalMRecyclerView.setAdapter(mAdapter[0]);
 
+                    if(plus == 0) {
+                        mAdapter[0] = new PhotoPagerAdapter(dataSet, viewPager);
+                        photoRecyclerView.setAdapter(mAdapter[0]);
+                    }
+
+                    mAdapter[0].notifyItemRangeChanged(0, mAdapter[0].getItemCount());
                     aq.id(R.id.tvGuide).gone();
 
 
-                    photoSectionsPagerAdapter.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                    photoRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
                         @Override
                         public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                             totalItemCount = glManager.getItemCount();
@@ -243,7 +279,7 @@ public class MainActivity extends AppCompatBaseActivity {
                             firstVisibleItem = glManager.findFirstVisibleItemPosition();
 
                             if (loading) {
-                                if (totalItemCount > previousTotal) {
+                                if (totalItemCount > previousTotal && lastCount == 0) {
                                     loading = false;
                                     previousTotal = totalItemCount;
                                 }
@@ -251,8 +287,20 @@ public class MainActivity extends AppCompatBaseActivity {
                             if (!loading && (totalItemCount - visibleItemCount)
                                     <= (firstVisibleItem + 5)) {
                                 // End has been reached
-                                SetSearchImage(query, 1);
-                                loading = true;
+                                if(pageno < 3) {
+                                    showModalProgress(true);
+                                    SetSearchImage(1);
+                                    loading = true;
+                                }
+                                else {
+                                    if(lastCount == 0)
+                                    {
+                                        Toast.makeText(context, getString(R.string.last_page), Toast.LENGTH_SHORT).show();
+                                    }
+                                    loading = false;
+
+                                    lastCount++;
+                                }
                             }
                         }
                     });
