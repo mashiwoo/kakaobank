@@ -107,13 +107,32 @@ public class AppCompatBaseActivity extends AppCompatActivity
 		alert.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				dialog.dismiss();     //�ݱ�
+				dialog.dismiss();
 			}
 		});
 		alert.setMessage(msg);
 		alert.show();
 	}
 
+	protected void confirm(int msgId)
+	{
+		String message = getString(msgId);
+		confirm(message);
+	}
+
+	protected void confirm(String msg)
+	{
+		AlertDialog.Builder confirm = new AlertDialog.Builder(context, AlertDialog.THEME_DEVICE_DEFAULT_LIGHT);
+		confirm.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+			}
+		});
+		confirm.setNegativeButton("No", null);
+		confirm.setMessage(msg);
+		confirm.show();
+	}
 
 	protected boolean downloadImg(String url, String filename) {
 		URL imgurl;

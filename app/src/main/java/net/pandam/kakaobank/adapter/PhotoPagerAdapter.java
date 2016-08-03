@@ -1,6 +1,8 @@
 package net.pandam.kakaobank.adapter;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Environment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.RecyclerView;
@@ -85,20 +87,32 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.Vi
         holder.ivPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final String filepath = Environment.getExternalStorageDirectory() + "/kakaobank/" + mdataSet.get(position).title + "_" + position + ".png";
-                final File file = new File(filepath);
 
-                aq.download(downloadurl, file, new AjaxCallback<File>() {
+                AlertDialog.Builder confirm = new AlertDialog.Builder(context, AlertDialog.THEME_DEVICE_DEFAULT_LIGHT);
+                confirm.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
-                    public void callback(String url, File object, AjaxStatus status) {
-                        if (object != null) {
-                            Toast.makeText(context, filepath + " 저장 하였습니다.", Toast.LENGTH_SHORT).show();
-                            MainActivity.setMyBox(context, viewPager);
-                        }
-                        else
-                            Toast.makeText(context, "저장 실패", Toast.LENGTH_SHORT).show();
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        final String filepath = Environment.getExternalStorageDirectory() + "/kakaobank/" + mdataSet.get(position).title + "_" + position + ".png";
+                        final File file = new File(filepath);
+                        aq.download(downloadurl, file, new AjaxCallback<File>() {
+                            @Override
+                            public void callback(String url, File object, AjaxStatus status) {
+                                if (object != null) {
+                                    Toast.makeText(context, filepath + " 저장 하였습니다.", Toast.LENGTH_SHORT).show();
+                                    MainActivity.setMyBox(context, viewPager);
+                                }
+                                else
+                                    Toast.makeText(context, "저장 실패", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+
+                        dialog.dismiss();
                     }
                 });
+                confirm.setNegativeButton(android.R.string.no, null);
+                confirm.setMessage("이미지를 저장할까요?");
+                confirm.show();
             }
         });
     }
