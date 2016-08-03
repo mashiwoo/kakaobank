@@ -20,7 +20,6 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -127,7 +126,7 @@ public class MainActivity extends AppCompatBaseActivity {
         searchView.setOnQueryTextListener(new MaterialSearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(final String query) {
-                showModalProgress(true);
+                showModalProgress(true, getString(R.string.list_loading));
                 viewPager.setCurrentItem(0);
 
                 ClearQuery();
@@ -288,7 +287,7 @@ public class MainActivity extends AppCompatBaseActivity {
                                     <= (firstVisibleItem + 5)) {
                                 // End has been reached
                                 if(pageno < 3) {
-                                    showModalProgress(true);
+                                    showModalProgress(true, getString(R.string.list_loading));
                                     SetSearchImage(1);
                                     loading = true;
                                 }

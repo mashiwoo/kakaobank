@@ -206,8 +206,7 @@ public class AppCompatBaseActivity extends AppCompatActivity
 				{
 					progressDialog = ProgressDialog.show(context, "", message, true);
 					progressDialog.setCancelable(true);
-					progressDialog.setIndeterminateDrawable(getResources().getDrawable(R.drawable.loading));
-					progressDialog.setContentView(R.layout.loading);
+					progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
 				}
 			}
 			else

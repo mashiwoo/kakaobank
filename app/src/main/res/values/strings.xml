@@ -5,5 +5,6 @@
     <string name="no_result">검색 결과가 없습니다.</string>
     <string name="search_guide">상단 돋보기를 이용하여 검색 하십시오.</string>
     <string name="last_page">마지막 이미지 입니다.</string>
+    <string name="list_loading">이미지를 불러오는 중입니다.</string>
 
 </resources>
