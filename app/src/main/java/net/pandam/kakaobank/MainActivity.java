@@ -18,6 +18,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.RecyclerView.Adapter;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -70,7 +71,7 @@ public class MainActivity extends AppCompatBaseActivity {
     private int pageno = 1;
     private int lastCount = 0;
     private ArrayList<PhotosInfo> dataSet = null;
-    private RecyclerView.Adapter[] mAdapter = null;
+    private Adapter mAdapter = null;
     private ArrayList<PhotosInfo> photosInfos;
     private SharedPreferences pref;
 
@@ -171,7 +172,7 @@ public class MainActivity extends AppCompatBaseActivity {
         previousTotal = 0;
 
         dataSet = new ArrayList<>();
-        mAdapter = new RecyclerView.Adapter[1];
+        mAdapter = null;
 
         setRecyclerView();
     }
@@ -250,8 +251,8 @@ public class MainActivity extends AppCompatBaseActivity {
                     aq.id(R.id.tvGuide).visible();
                     dataSet.clear();
 
-                    mAdapter[0] = new PhotoPagerAdapter(dataSet, viewPager);
-                    photoRecyclerView.setAdapter(mAdapter[0]);
+                    mAdapter = new PhotoPagerAdapter(dataSet, viewPager);
+                    photoRecyclerView.setAdapter(mAdapter);
 
                 }
                 else {
@@ -262,11 +263,11 @@ public class MainActivity extends AppCompatBaseActivity {
 
 
                     if(plus == 0) {
-                        mAdapter[0] = new PhotoPagerAdapter(dataSet, viewPager);
-                        photoRecyclerView.setAdapter(mAdapter[0]);
+                        mAdapter = new PhotoPagerAdapter(dataSet, viewPager);
+                        photoRecyclerView.setAdapter(mAdapter);
                     }
 
-                    mAdapter[0].notifyItemRangeChanged(0, mAdapter[0].getItemCount());
+                    mAdapter.notifyItemRangeChanged(0, mAdapter.getItemCount());
                     aq.id(R.id.tvGuide).gone();
 
 
@@ -318,13 +319,11 @@ public class MainActivity extends AppCompatBaseActivity {
 
     public static void setMyBox(Context context, View view)
     {
-        RecyclerView albumSectionsPagerAdapter = null;
+        RecyclerView albumSectionsPagerAdapter;
+        Adapter mAdapter;
 
-        final RecyclerView.Adapter[] mAdapter = new RecyclerView.Adapter[1];
-
-        final ArrayList<AlbumInfo> dataSet;
-        final ArrayList<AlbumInfo> albumInfos = new ArrayList<AlbumInfo>();
-
+        ArrayList<AlbumInfo> dataSet;
+        ArrayList<AlbumInfo> albumInfos = new ArrayList<AlbumInfo>();
 
         albumSectionsPagerAdapter = (RecyclerView) view.findViewById(R.id.rvPhoto);
         TextView tvNoData = (TextView) view.findViewById(R.id.tvNoData);
@@ -346,7 +345,6 @@ public class MainActivity extends AppCompatBaseActivity {
 
         try {
 
-
             for(File file : list) {
                 if (file.getName().endsWith(".png")) {
                     AlbumInfo ai = new AlbumInfo();
@@ -358,8 +356,8 @@ public class MainActivity extends AppCompatBaseActivity {
                 dataSet.add(albumInfos.get(i));
             }
 
-            mAdapter[0] = new AlbumPagerAdapter(dataSet);
-            albumSectionsPagerAdapter.setAdapter(mAdapter[0]);
+                mAdapter = new AlbumPagerAdapter(dataSet);
+                albumSectionsPagerAdapter.setAdapter(mAdapter);
 
             if(albumInfos.size() <= 0)
                 aq.id(tvNoData).visible();
