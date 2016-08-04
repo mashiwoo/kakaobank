@@ -75,46 +75,48 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.Vi
     // Replace the contents of a view (invoked by the layout manager)
     @Override
     public void onBindViewHolder(ViewHolder holder, final int position) {
-        // - get element from your dataset at this position
-        // - replace the contents of the view with that element
-        final AQuery aq = holder.aq;
+        if(position < mdataSet.size()) {
+            if (!mdataSet.isEmpty()) {
 
-        holder.aq.id(holder.tvText).text(mdataSet.get(position).title);
-        holder.aq.id(holder.ivPhoto).image(mdataSet.get(position).thumbnail);
-        final Context context = holder.context;
-        final String downloadurl = mdataSet.get(position).image;
+                final AQuery aq = holder.aq;
 
-        holder.ivPhoto.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+                holder.aq.id(holder.tvText).text(mdataSet.get(position).title);
+                holder.aq.id(holder.ivPhoto).image(mdataSet.get(position).thumbnail);
+                final Context context = holder.context;
+                final String downloadurl = mdataSet.get(position).image;
 
-                AlertDialog.Builder confirm = new AlertDialog.Builder(context, AlertDialog.THEME_DEVICE_DEFAULT_LIGHT);
-                confirm.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                holder.ivPhoto.setOnClickListener(new View.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int which) {
+                    public void onClick(View v) {
 
-                        final String filepath = Environment.getExternalStorageDirectory() + "/kakaobank/" + mdataSet.get(position).title + "_" + position + ".png";
-                        final File file = new File(filepath);
-                        aq.download(downloadurl, file, new AjaxCallback<File>() {
+                        AlertDialog.Builder confirm = new AlertDialog.Builder(context, AlertDialog.THEME_DEVICE_DEFAULT_LIGHT);
+                        confirm.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                             @Override
-                            public void callback(String url, File object, AjaxStatus status) {
-                                if (object != null) {
-                                    Toast.makeText(context, filepath + " 저장 하였습니다.", Toast.LENGTH_SHORT).show();
-                                    MainActivity.setMyBox(context, viewPager);
-                                }
-                                else
-                                    Toast.makeText(context, "저장 실패", Toast.LENGTH_SHORT).show();
+                            public void onClick(DialogInterface dialog, int which) {
+
+                                final String filepath = Environment.getExternalStorageDirectory() + "/kakaobank/" + mdataSet.get(position).title + "_" + position + ".png";
+                                final File file = new File(filepath);
+                                aq.download(downloadurl, file, new AjaxCallback<File>() {
+                                    @Override
+                                    public void callback(String url, File object, AjaxStatus status) {
+                                        if (object != null) {
+                                            Toast.makeText(context, filepath + " 저장 하였습니다.", Toast.LENGTH_SHORT).show();
+                                            MainActivity.setMyBox(context, viewPager);
+                                        } else
+                                            Toast.makeText(context, "저장 실패", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+
+                                dialog.dismiss();
                             }
                         });
-
-                        dialog.dismiss();
+                        confirm.setNegativeButton(android.R.string.no, null);
+                        confirm.setMessage("이미지를 저장할까요?");
+                        confirm.show();
                     }
                 });
-                confirm.setNegativeButton(android.R.string.no, null);
-                confirm.setMessage("이미지를 저장할까요?");
-                confirm.show();
             }
-        });
+        }
     }
 
     // Return the size of your dataset (invoked by the layout manager)

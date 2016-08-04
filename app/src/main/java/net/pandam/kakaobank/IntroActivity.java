@@ -24,11 +24,11 @@ public class IntroActivity extends Activity {
         aq = new AQuery(this);
 
         aq.id(R.id.ivIntro).animate(R.anim.action_intro);
-        MainThreadEnd();
+        mainThreadEnd();
     }
 
 
-    private void MainThreadEnd()
+    private void mainThreadEnd()
     {
         Handler handler =    new Handler()
         {

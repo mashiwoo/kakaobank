@@ -13,7 +13,7 @@ import com.androidquery.AQuery;
 
 import net.pandam.kakaobank.R;
 import net.pandam.kakaobank.ViewPhotoActivity;
-import net.pandam.kakaobank.module.PhotosInfo;
+import net.pandam.kakaobank.module.AlbumInfo;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ import java.util.ArrayList;
  * Created by Pandam on 16. 7. 30..
  */
 public class AlbumPagerAdapter extends RecyclerView.Adapter<AlbumPagerAdapter.ViewHolder> {
-    private ArrayList<PhotosInfo> mdataSet;
+    private ArrayList<AlbumInfo> mdataSet;
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
@@ -43,7 +43,7 @@ public class AlbumPagerAdapter extends RecyclerView.Adapter<AlbumPagerAdapter.Vi
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public AlbumPagerAdapter(ArrayList<PhotosInfo> dataSet) {
+    public AlbumPagerAdapter(ArrayList<AlbumInfo> dataSet) {
         mdataSet = dataSet;
     }
 
@@ -63,20 +63,25 @@ public class AlbumPagerAdapter extends RecyclerView.Adapter<AlbumPagerAdapter.Vi
     public void onBindViewHolder(final ViewHolder holder, final int position) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
-        final AQuery aq = holder.aq;
-        File fileImage = new File(Environment.getExternalStorageDirectory() + "/kakaobank/" + mdataSet.get(position).thumbnail);
-        final String fileName = mdataSet.get(position).thumbnail;
-        holder.aq.id(holder.ivPhoto).image(fileImage, RecyclerView.LayoutParams.WRAP_CONTENT);
+        if(position < mdataSet.size()) {
+            if (!mdataSet.isEmpty()) {
 
-        holder.ivPhoto.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+                final AQuery aq = holder.aq;
+                File fileImage = new File(Environment.getExternalStorageDirectory() + "/kakaobank/" + mdataSet.get(position).image);
+                final String fileName = mdataSet.get(position).image;
+                holder.aq.id(holder.ivPhoto).image(fileImage, RecyclerView.LayoutParams.WRAP_CONTENT);
 
-                Intent it = new Intent(holder.context, ViewPhotoActivity.class);
-                it.putExtra("fileName", fileName);
-                holder.context.startActivity(it);
+                holder.ivPhoto.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                        Intent it = new Intent(holder.context, ViewPhotoActivity.class);
+                        it.putExtra("fileName", fileName);
+                        holder.context.startActivity(it);
+                    }
+                });
             }
-        });
+        }
 
     }
 

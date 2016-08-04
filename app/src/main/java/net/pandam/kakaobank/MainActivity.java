@@ -26,6 +26,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.androidquery.AQuery;
@@ -37,6 +38,7 @@ import net.pandam.kakaobank.adapter.AlbumPagerAdapter;
 import net.pandam.kakaobank.adapter.PhotoPagerAdapter;
 import net.pandam.kakaobank.global.AppCompatBaseActivity;
 import net.pandam.kakaobank.global.Constants;
+import net.pandam.kakaobank.module.AlbumInfo;
 import net.pandam.kakaobank.module.PhotosInfo;
 import net.pandam.kakaobank.uitil.EncryptionApp;
 
@@ -55,7 +57,7 @@ public class MainActivity extends AppCompatBaseActivity {
     MaterialSearchView searchView;
     private final int REQUEST_PERMISSION_STORAGE		= 1000;
 
-    private AQuery aq;
+    private static AQuery aq;
     private ViewPager viewPager;
     private SectionsPagerAdapter mSectionsPagerAdapter;
     private RecyclerView photoRecyclerView = null;
@@ -129,10 +131,10 @@ public class MainActivity extends AppCompatBaseActivity {
                 showModalProgress(true, getString(R.string.list_loading));
                 viewPager.setCurrentItem(0);
 
-                ClearQuery();
+                clearQuery();
                 pref.edit().putString("query", query).commit();
 
-                SetSearchImage(0);
+                setSearchImage(0);
 
                 return false;
             }
@@ -157,7 +159,7 @@ public class MainActivity extends AppCompatBaseActivity {
         });
     }
 
-    private void ClearQuery()
+    private void clearQuery()
     {
         dataSet = new ArrayList<>();
         pageno = 1;
@@ -171,10 +173,10 @@ public class MainActivity extends AppCompatBaseActivity {
         dataSet = new ArrayList<>();
         mAdapter = new RecyclerView.Adapter[1];
 
-        SetRecyclerView();
+        setRecyclerView();
     }
 
-    private void SetRecyclerView()
+    private void setRecyclerView()
     {
 
         photoRecyclerView = (RecyclerView) viewPager.findViewById(R.id.rvMain);
@@ -191,13 +193,10 @@ public class MainActivity extends AppCompatBaseActivity {
         photoRecyclerView.setLayoutManager(glManager);
     }
 
-    private void SetSearchImage(final int plus) {
-
+    private void setSearchImage(final int plus) {
 
         photosInfos = new ArrayList<PhotosInfo>();
-        // specify an adapter (see also next example)
 
-        //Do some magic
         String Keyword = URLEncoder.encode(pref.getString("query",""));
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("apikey", Constants.KEY);
@@ -212,35 +211,36 @@ public class MainActivity extends AppCompatBaseActivity {
                 if (jo != null) {
                     try {
                         JSONObject joChannel = jo.getJSONObject("channel");
-                        String result = joChannel.getString("result");
 
-                        JSONArray jaItem = joChannel.getJSONArray("item");
+                        if(joChannel != null) {
+                            String result = joChannel.getString("result");
 
-                        for (int i = 0; i < jaItem.length(); i++) {
-                            JSONObject joItem = jaItem.getJSONObject(i);
+                            JSONArray jaItem = joChannel.getJSONArray("item");
 
-                            PhotosInfo pi = new PhotosInfo();
-                            pi.thumbnail = joItem.getString("thumbnail");
-                            pi.image = joItem.getString("image");
-                            pi.title = pref.getString("query","");
+                            for (int i = 0; i < jaItem.length(); i++) {
+                                JSONObject joItem = jaItem.getJSONObject(i);
 
-                            photosInfos.add(pi);
+                                PhotosInfo pi = new PhotosInfo();
+                                pi.thumbnail = joItem.getString("thumbnail");
+                                pi.image = joItem.getString("image");
+                                pi.title = pref.getString("query", "");
+
+                                photosInfos.add(pi);
+                            }
+                            setItme();
                         }
+                        else
+                            notificationNoData();
 
-                        setItme();
 
 
                     } catch (Exception e) {
-                        Toast.makeText(context, getString(R.string.no_result), Toast.LENGTH_SHORT).show();
-                        aq.id(R.id.tvGuide).visible();
+                        notificationNoData();
                     }
                 }
                 else
-                {
-                    //검색 결과 없음
-                    Toast.makeText(context, getString(R.string.no_result), Toast.LENGTH_SHORT).show();
-                    aq.id(R.id.tvGuide).visible();
-                }
+                    notificationNoData();
+
             }
 
             private void setItme() {
@@ -288,7 +288,7 @@ public class MainActivity extends AppCompatBaseActivity {
                                 // End has been reached
                                 if(pageno < 3) {
                                     showModalProgress(true, getString(R.string.list_loading));
-                                    SetSearchImage(1);
+                                    setSearchImage(1);
                                     loading = true;
                                 }
                                 else {
@@ -309,20 +309,25 @@ public class MainActivity extends AppCompatBaseActivity {
         });
     }
 
+    public void notificationNoData()
+    {
+        Toast.makeText(context, getString(R.string.no_result), Toast.LENGTH_SHORT).show();
+        aq.id(R.id.tvGuide).visible();
+    }
+
 
     public static void setMyBox(Context context, View view)
     {
         RecyclerView albumSectionsPagerAdapter = null;
 
         final RecyclerView.Adapter[] mAdapter = new RecyclerView.Adapter[1];
-        RecyclerView.LayoutManager mLayoutManager;
 
-        final ArrayList<PhotosInfo> dataSet;
-        final ArrayList<PhotosInfo> photosInfos = new ArrayList<PhotosInfo>();
+        final ArrayList<AlbumInfo> dataSet;
+        final ArrayList<AlbumInfo> albumInfos = new ArrayList<AlbumInfo>();
 
 
         albumSectionsPagerAdapter = (RecyclerView) view.findViewById(R.id.rvPhoto);
-
+        TextView tvNoData = (TextView) view.findViewById(R.id.tvNoData);
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
         albumSectionsPagerAdapter.setHasFixedSize(true);
@@ -340,25 +345,30 @@ public class MainActivity extends AppCompatBaseActivity {
         File[] list = folder.listFiles();
 
         try {
+
+
             for(File file : list) {
                 if (file.getName().endsWith(".png")) {
-                    PhotosInfo pi = new PhotosInfo();
-                    pi.thumbnail = file.getName();
-                    pi.image = file.getName();
-                    pi.title = file.getName();
-                    photosInfos.add(pi);
+                    AlbumInfo ai = new AlbumInfo();
+                    ai.image = file.getName();
+                    albumInfos.add(ai);
                 }
             }
-            for(int i = 0; i < photosInfos.size(); i++) {
-                dataSet.add(photosInfos.get(i));
+            for(int i = 0; i < albumInfos.size(); i++) {
+                dataSet.add(albumInfos.get(i));
             }
 
             mAdapter[0] = new AlbumPagerAdapter(dataSet);
             albumSectionsPagerAdapter.setAdapter(mAdapter[0]);
+
+            if(albumInfos.size() <= 0)
+                aq.id(tvNoData).visible();
+            else
+                aq.id(tvNoData).gone();
         }
         catch (Exception ex)
         {
-
+            aq.id(tvNoData).visible();
         }
 
 
@@ -407,7 +417,6 @@ public class MainActivity extends AppCompatBaseActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_search) {
             return true;
         }
@@ -484,7 +493,6 @@ public class MainActivity extends AppCompatBaseActivity {
 
         @Override
         public int getCount() {
-            // Show 2 total pages.
             return 2;
         }
 
